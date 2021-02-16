@@ -1,0 +1,15 @@
+
+```{r}
+library(tidyverse)
+```
+
+
+```{r}
+data <- read.csv("../Data/Processed data/data_2014_5130.csv")
+```
+
+```{r}
+plot(data$antalarter, data$total_obs)
+```
+
+
