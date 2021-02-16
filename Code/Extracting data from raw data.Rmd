@@ -50,19 +50,5 @@ data_2014 <- data_2014[, colSums(data_2014 != "mv") > 0]
 
 
 
-```{r}
-data_2014$total_obs <- rowSums(data_2014[,grep("Cover", names(data_2014))])
-```
-
-
-```{r}
-data_2014$shanon_index <- rowSums(-data_2014[, grep("Cover", names(data_2014))]/data_2014$total_obs * log(data_2014[, grep("Cover", names(data_2014))]/data_2014$total_obs), na.rm = TRUE  )
-```
-
-```{r}
-write.csv(data_2014, file = "Data/Processed data//data_2014_5130.csv")
-```
-
-
 
 
