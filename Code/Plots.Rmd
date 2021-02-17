@@ -1,6 +1,9 @@
 
 ```{r}
 library(tidyverse)
+library(fitdistrplus)
+library(MASS)
+library(VGAM)
 ```
 
 
@@ -8,8 +11,24 @@ library(tidyverse)
 data <- read.csv("../Data/Processed data/data_2014_5130.csv")
 ```
 
+
 ```{r}
-plot(data$antalarter, data$total_obs)
+ggplot(data = data, mapping = aes(x = antalarter, y = shanon_index, group = site)) + 
+  geom_point(mapping = aes( color = factor(site)), size = 4)
 ```
 
+```{r}
+ggplot(mapping =  aes( x = data[,grep("X2020Cover", names(data))]/16)) + 
+  geom_histogram()
+```
+
+
+```{r}
+fitdistr(c(data[,grep("X2020Cover", names(data))]/16), "beta-binomial", list(shape1=1,shape2=1))
+```
+
+
+```{r}
+
+```
 

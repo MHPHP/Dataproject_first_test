@@ -1,0 +1,14 @@
+
+```{r}
+library(tidyverse)
+library(ggmap)
+library(tmaptools)
+```
+
+```{r}
+ggmap(get_stamenmap(bbox = c(right = 12, left = 8, top = 58, bottom = 54)))
+```
+```{r}
+ggmap(get_stamenmap(rbind(as.numeric(paste(geocode_OSM("Herning")$bbox))), zoom = 15))
+```
+
