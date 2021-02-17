@@ -1,0 +1,5 @@
+Term, Explanation;
+Alpha diversity,  is the mean species diversity in sites or habitats at a local scale;
+Species diversity, is the number of different species that are represented in a given community (a dataset);
+Beta diversity, is the ratio between regional and local species diversity;
+Gamma diversity, is the total species diversity in a landscape;
