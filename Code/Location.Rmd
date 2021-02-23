@@ -36,26 +36,7 @@ data_2014 <- convert_to_longlat(data_2014, data_2014$UTMx, data_2014$UTMy)
 ```{r}
 data_5130 <- convert_to_longlat(data_5130, data_5130$UTMx, data_5130$UTMy)
 ```
-```{r}
-convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
-  # Create a new data frame with only the UTM data
-  df <- data.frame(UTMx, UTMy)
-  df[is.na(df)] <- 0
-  view(df)
-  #Make it a SP object and specify the projection
-  coordinates(df) <-  ~ UTMx + UTMy
-  proj4string(df) <- CRS("+proj=utm +zone=32 +ellps=intl +units=m +no_defs +datum=WGS84")
-  
-  #Transform the data to long lat
-  df1 <- spTransform(df, CRS("+init=epsg:4326"))
-  
-  # Write the long lat
-  data_frame_input$latitude <-  df1@coords[,2]
-  data_frame_input$longtitude <-  df1@coords[,1]
-  data_frame_input$latitude[]
-  return(data_frame_input)
-}
-```
+
 
 
 
@@ -69,7 +50,7 @@ map1 <- world.map %>% filter(region == "Denmark")
 ggplot(map1)+ 
   geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") + 
   coord_map() + 
-  geom_point(data = data_5130, aes(y=latitude, x = longtitude), colour = "red", alpha = .9)
+  geom_point(data = data_5130, aes(y=latitude, x = longtitude, colour = factor(year)), alpha = .9, size =2)
 ```
 
 

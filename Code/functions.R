@@ -23,6 +23,10 @@ find_art_nr <- function(name, latin = FALSE) {
 convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
   # Create a new data frame with only the UTM data
   df <- data.frame(UTMx, UTMy)
+  # turn na to 0 for calculations and sva which points are na
+  df_na <- df
+  df[is.na(df)] <- 0
+  
   
   #Make it a SP object and specify the projection
   coordinates(df) <-  ~ UTMx + UTMy
@@ -34,6 +38,10 @@ convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
   # Write the long lat
   data_frame_input$latitude <-  df1@coords[,2]
   data_frame_input$longtitude <-  df1@coords[,1]
+  
+  # Turn na back to na
+  data_frame_input$latitude[is.na(df_na[1]) ] <- NA 
+  data_frame_input$longtitude[is.na(df_na[2]) ] <- NA 
   
   return(data_frame_input)
 }
