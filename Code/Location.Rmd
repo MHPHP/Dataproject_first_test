@@ -6,6 +6,7 @@ library(tmaptools)
 library(sp)
 library(rgdal)
 library(mapproj)
+library(ggrepel)
 ```
 
 ```{r}
@@ -23,6 +24,7 @@ data_5130 <-read.csv("../Data/Processed data/data_5130.csv")
 ```{r}
 ggmap(get_stamenmap(bbox = c(right = 12, left = 8, top = 58, bottom = 54)))
 ```
+
 ```{r}
 ggmap(get_stamenmap(rbind(as.numeric(paste(geocode_OSM("Herning")$bbox))), zoom = 15))
 ```
@@ -50,9 +52,30 @@ map1 <- world.map %>% filter(region == "Denmark")
 ggplot(map1)+ 
   geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") + 
   coord_map() + 
-  geom_point(data = data_5130, aes(y=latitude, x = longtitude, colour = factor(year)), alpha = .9, size =2)
+  geom_point(data = data_5130, aes(y=latitude, x = longtitude, colour = factor(year)), alpha = .9, size =2) +
+  geom_text_repel(data  = data_5130, aes(y=latitude, x = longtitude, label=site),hjust=0, vjust=0, max.overlaps = 100)
 ```
 
 
+Get mean postion for each site
+
+```{r}
+mean_site_pos <-  data_5130 %>%
+                group_by(site) %>% 
+                  summarise_at(vars(longtitude, latitude),mean,na.rm = TRUE)
+  
+  
+mean_site_pos <-  rename(mean_site_pos, longtitude_mean_site = longtitude, latitude_mean_site = latitude)
+
+data_5130 <-left_join(data_5130,mean_site_pos, by = "site")
+```
 
 
+plot each site
+```{r}
+ggplot(map1)+ 
+  geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") + 
+  coord_map() + 
+  geom_point(data = data_5130, aes(y=latitude, x = longtitude, colour = factor(year)), alpha = .9, size =2) +
+  geom_text_repel(data  = mean_site_pos, aes(y=latitude_mean_site, x = longtitude_mean_site, label=site),hjust=0, vjust=0)
+```
