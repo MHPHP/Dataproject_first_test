@@ -7,6 +7,10 @@ source("functions.r")
 Read the data
 
 
+
+
+
+```{r}
 artslist <- read.csv("../../Raw data/artsliste.csv")
 ```
 
