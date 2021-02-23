@@ -1,11 +1,13 @@
 
 ```{r}
 library(tidyverse)
+source("functions.r")
 ```
 
 Read the data
-```{r}
-data_2014 <-read.csv("../Data/Processed data/data_2014_5130.csv")
+
+
+artslist <- read.csv("../../Raw data/artsliste.csv")
 ```
 
 
@@ -14,15 +16,27 @@ Get total observations in Cover
 data_2014$total_obs <- rowSums(data_2014[,grep("Cover", names(data_2014))])
 ```
 
-Calculate shanon index from cover data
+
+
 ```{r}
-data_2014$shanon_index <- rowSums(-data_2014[, grep("Cover", names(data_2014))]/data_2014$total_obs * log(data_2014[, grep("Cover", names(data_2014))]/data_2014$total_obs), na.rm = TRUE  )
+data_2014 <- simple_shanon_index(data_2014)
+data_5130 <- simple_shanon_index(data_5130)
+```
+
+
+
+Get a yes no value if there is detected enebærbuske.
+```{r}
+data_2014$enebær <- ifelse(rowSums(data_2014[, grep(paste(c(find_art_nr("Juniperus", latin =  TRUE)[,1]), collapse="|"), names(data_2014))]) > 0,1,0)
+
+data_5130$enebær <- ifelse(rowSums(data_5130[, grep(paste(c(find_art_nr("Juniperus", latin =  TRUE)[,1]), collapse="|"), names(data_5130))]) > 0,1,0)
 ```
 
 
 Save the changes
 ```{r}
-write.csv(data_2014, file = "../Data/Processed data//data_2014_5130.csv")
+write.csv(data_2014, file = "../Data/Processed data//data_2014_5130.csv", row.names=FALSE)
+write.csv(data_5130, file = "../Data/Processed data//data_5130.csv", row.names=FALSE)
 ```
 
 

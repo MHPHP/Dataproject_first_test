@@ -3,7 +3,22 @@
 library(tidyverse)
 library(ggmap)
 library(tmaptools)
+library(sp)
+library(rgdal)
+library(mapproj)
 ```
+
+```{r}
+source("functions.r")
+```
+
+
+```{r}
+data_2014 <-read.csv("../Data/Processed data/data_2014_5130.csv")
+data_5130 <-read.csv("../Data/Processed data/data_5130.csv")
+```
+
+
 
 ```{r}
 ggmap(get_stamenmap(bbox = c(right = 12, left = 8, top = 58, bottom = 54)))
@@ -11,4 +26,28 @@ ggmap(get_stamenmap(bbox = c(right = 12, left = 8, top = 58, bottom = 54)))
 ```{r}
 ggmap(get_stamenmap(rbind(as.numeric(paste(geocode_OSM("Herning")$bbox))), zoom = 15))
 ```
+
+
+
+```{r}
+data_2014 <- convert_to_longlat(data_2014, data_2014$UTMx, data_2014$UTMy)
+```
+
+
+
+```{r}
+world.map <- map_data ("world")
+map1 <- world.map %>% filter(region == "Denmark")
+```
+
+
+```{r}
+ggplot(map1)+ 
+  geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") + 
+  coord_map() + 
+  geom_point(data = data_2014, aes(y=latitude, x = longtitude), colour = "red", alpha = .9)
+```
+
+
+
 

@@ -8,27 +8,47 @@ library(VGAM)
 
 
 ```{r}
-data <- read.csv("../Data/Processed data/data_2014_5130.csv")
+data_2014 <- read.csv("../Data/Processed data/data_2014_5130.csv")
+data_5130 <- read.csv("../Data/Processed data/data_5130.csv")
 ```
 
 
 ```{r}
-ggplot(data = data, mapping = aes(x = antalarter, y = shanon_index, group = site)) + 
+ggplot(data = data_2014, mapping = aes(x = antalarter, y = shanon_index, group = site)) + 
   geom_point(mapping = aes( color = factor(site)), size = 4)
 ```
 
 ```{r}
-ggplot(mapping =  aes( x = data[,grep("X2020Cover", names(data))]/16)) + 
+ggplot(mapping =  aes( x = data_2014[,grep("X2020Cover", names(data_2014))]/16)) + 
   geom_histogram()
 ```
 
 
 ```{r}
-fitdistr(c(data[,grep("X2020Cover", names(data))]/16), "beta-binomial", list(shape1=1,shape2=1))
+ggplot(data = data_5130, mapping = aes(x = factor(year), y = simple_shanon_index)) + 
+  geom_boxplot() + geom_jitter(width=0.1,alpha=0.2)
 ```
 
 
-```{r}
+Ser om der er forskel plots med enebær og ikke enebærbuske.
 
+```{r}
+ggplot(data = data_5130, mapping = aes(x = factor(year), y = simple_shanon_index, fill = factor(enebær))) + 
+  geom_boxplot() + geom_jitter(width=0.1,alpha=0.2)
+```
+
+Vi har meget få obervation hvor der ikke er enebær busk til stede.
+
+
+
+```{r}
+ggplot(data = data_5130, mapping = aes(x = as.numeric(enebær5md), y = simple_shanon_index)) + 
+  geom_point() + 
+  geom_smooth(method = "lm", formula =  y~x)
+```
+  
+
+```{r}
+lm(data_5130$simple_shanon_index ~ as.numeric(data_5130$enebær5md ))
 ```
 

@@ -6,16 +6,16 @@ library(tidyverse)
 
 ```{r}
 #read data.
-cover <- read.csv("../Raw data/alledata-cover.csv")
+cover <- read.csv("../../Raw data/alledata-cover.csv")
 
-frekvens <- read.csv("../Raw data/alledata-frekvens.csv")
+frekvens <- read.csv("../../Raw data/alledata-frekvens.csv")
 
-abiotiske <- read.csv("../Raw data/alledata-abiotiske.csv")
-artslist <- read.csv("../Raw data/artsliste.csv")
-traits <- read.csv("../Raw data/traits.csv")
+abiotiske <- read.csv("../../Raw data/alledata-abiotiske.csv")
+artslist <- read.csv("../../Raw data/artsliste.csv")
+traits <- read.csv("../../Raw data/traits.csv")
 
-cover_taxa <- read.csv("../Raw data/alledata-cover-samletaxa.csv") 
-frekvens_taxa <- read.csv("../Raw data/alledata-frekvens-samletaxa.csv")
+cover_taxa <- read.csv("../../Raw data/alledata-cover-samletaxa.csv") 
+frekvens_taxa <- read.csv("../../Raw data/alledata-frekvens-samletaxa.csv")
 
 ```
 
@@ -41,6 +41,11 @@ data_2014_full <- df1[df1$terhabtype == "{5130}" & df1$year == 2014,]
 ```
 
 
+```{r}
+taxa1 <- cover_taxa[cover_taxa$site == c(5203) & cover_taxa$year == 2014,]
+```
+
+
 
 Remove all the columns with only 0 values or only mv (missing values).
 ```{r}
@@ -50,5 +55,15 @@ data_2014 <- data_2014[, colSums(data_2014 != "mv") > 0]
 
 
 
+```{r}
+data_5130_full <- df1[df1$terhabtype == "{5130}",]
 
+
+data_5130 <- data_5130_full[, colSums(data_5130_full != 0) > 0]
+data_5130 <- data_5130[, colSums(data_5130 != "mv") > 0]
+```
+
+```{r}
+write.csv(data_5130, file = "../Data/Processed data//data_5130.csv")
+```
 
