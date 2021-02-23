@@ -1,0 +1,134 @@
+
+```{r, include = FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+
+```{r}
+#read data.
+cover <- read.csv("alledata-cover.csv")
+
+frekvens <- read.csv("alledata-frekvens.csv")
+
+abiotiske <- read.csv("alledata-abiotiske.csv")
+```
+
+
+```{r}
+cover_data <- cover[abiotiske$terhabtype == "{5130}" & abiotiske$year == 2014,]
+```
+
+```{r}
+df <- cover_data
+
+for (ele in colnames(cover_data)){
+  if (sum(cover_data[,ele]) == 0){
+    df <- df[,!(names(df) %in% ele)]
+  }
+}
+
+```
+
+
+```{r}
+frekvens_data <- frekvens[abiotiske$terhabtype == "{5130}" & abiotiske$year == 2014,]
+
+dfrekvens <- frekvens_data
+
+for (ele in colnames(frekvens_data)){
+  if (sum(frekvens_data[,ele]) == 0){
+    dfrekvens <- dfrekvens[,!(names(dfrekvens) %in% ele)]
+  }
+}
+```
+
+
+Kolonner = planter/arter, der optræder i dfrekvens men ikke df.
+Dvs. at de inden for den der 5 m radius cirkel, men ikke i pin-plottet.
+```{r}
+setdiff(colnames(dfrekvens), colnames(df))
+```
+
+
+Shannon index
+```{r}
+df$Total <- rowSums(df[,4:39])
+```
+
+```{r}
+df$Shannon_index <- rowSums(-df[,4:39]/df$Total*log(df[,4:39]/df$Total), na.rm = TRUE )
+```
+
+```{r}
+df$diversity <- exp(df$Shannon_index)
+```
+
+
+
+```{r}
+ggplot(df, aes(x=X7180/16))+geom_histogram()
+```
+
+
+
+
+NYT FRA SIDST - ser kun på ét site. Lægger en smule til plots hvis de har en obs inden for cirklen men ikke i pin-plottet og beregner det nye shannon index. Dette afhænger af, hvor mange plots arten er observeret i inden for dét site vi ser på. 
+
+```{r}
+tmp <- df[df$site == 5203,]
+tmp_frek <- dfrekvens[dfrekvens$site == 5203,]
+```
+
+
+summer søjlerne i frekvens tabellen => hvor mange plots en plante er observeret inde for et site. 
+
+I skal muligvis installere janitor pakken
+
+```{r}
+library(janitor)
+```
+
+```{r}
+ny <- tmp_frek %>% adorn_totals("row")
+```
+
+
+
+
+```{r}
+tmp_ny <- tmp
+for (i in 1:10){
+  for (ele in colnames(tmp[1,4:39])){
+    if (tmp[i,ele] == 0 & ny[i,ele] == 1){
+      tmp_ny[i,ele] <- ny[11,ele]/10
+    }
+  }
+}
+tmp_ny$Total <- rowSums(tmp_ny[,4:39])
+tmp_ny$Shannon_index <- rowSums(-tmp_ny[,4:39]/tmp_ny$Total*log(tmp_ny[,4:39]/tmp_ny$Total), na.rm = TRUE )
+
+
+tmp_ny$diversity <- exp(tmp_ny$Shannon_index)
+
+```
+
+```{r}
+tmp_ny$diversity
+```
+
+
+```{r}
+df$diversity[1:10]
+```
+
+
+
+
+
+
+
+
+
+
+
