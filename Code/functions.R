@@ -23,7 +23,7 @@ find_art_nr <- function(name, latin = FALSE) {
 convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
   # Create a new data frame with only the UTM data
   df <- data.frame(UTMx, UTMy)
-  # turn na to 0 for calculations and sva which points are na
+  # turn na to 0 for calculations and save which points are na
   df_na <- df
   df[is.na(df)] <- 0
   

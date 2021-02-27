@@ -7,6 +7,9 @@ library(sp)
 library(rgdal)
 library(mapproj)
 library(ggrepel)
+library(osmar)
+library(maps)
+library(OpenStreetMap)
 ```
 
 ```{r}
@@ -25,9 +28,38 @@ data_5130 <-read.csv("../Data/Processed data/data_5130.csv")
 ggmap(get_stamenmap(bbox = c(right = 12, left = 8, top = 58, bottom = 54)))
 ```
 
+
+map_data <-  data_5130[data_5130$site == 4531,] %>%  select(longtitude, latitude, longtitude_mean_site, latitude_mean_site)
+x_min <- min(map_data$longtitude)
+x_max <- max(map_data$longtitude)
+y_min <-  min(map_data$latitude)
+y_max <- max(map_data$latitude)
+
+ggmap(get_stamenmap(bbox = c(left = x_min, right = x_max, bottom = y_min, top = y_max), maptype = "terrain"))
+
+
+
+
+
+map_data <-  data_5130[data_5130$site == 4527,] %>%  select(longtitude, latitude, longtitude_mean_site, latitude_mean_site)
+x_min <- min(map_data$longtitude)
+x_max <- max(map_data$longtitude)
+y_min <-  min(map_data$latitude)
+y_max <- max(map_data$latitude)
+openmap_map <-  openmap(upperLeft = c(x_min, y_max), lowerRight = c(x_max, y_min), type = "stamen-toner")
+
 ```{r}
-ggmap(get_stamenmap(rbind(as.numeric(paste(geocode_OSM("Herning")$bbox))), zoom = 15))
+plot(openmap_map)
 ```
+
+
+
+baseUrl <- "https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}"
+map <- openmap(c(43.46886761482925,119.94873046875),
+	c(33.22949814144951,133.9892578125),
+		minNumTiles=4,
+		type=paste0(baseUrl,apiKey))
+plot(map)
 
 
 
@@ -79,3 +111,8 @@ ggplot(map1)+
   geom_point(data = data_5130, aes(y=latitude, x = longtitude, colour = factor(year)), alpha = .9, size =2) +
   geom_text_repel(data  = mean_site_pos, aes(y=latitude_mean_site, x = longtitude_mean_site, label=site),hjust=0, vjust=0)
 ```
+
+
+
+
+

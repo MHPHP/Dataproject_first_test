@@ -37,6 +37,11 @@ data_5130$enebær <- ifelse(rowSums(data_5130[, grep(paste(c(find_art_nr("Junipe
 ```
 
 
+```{r}
+find_art_nr("Juniperus", latin =  TRUE)
+```
+
+
 Save the changes
 ```{r}
 write.csv(data_2014, file = "../Data/Processed data//data_2014_5130.csv", row.names=FALSE)
