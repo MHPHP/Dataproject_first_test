@@ -10,63 +10,23 @@ library(ggrepel)
 library(osmar)
 library(maps)
 library(OpenStreetMap)
+library(gganimate)
+library(ggplot2)
+library(gifski)
+library(png)
 ```
-
+Load the function
 ```{r}
 source("functions.r")
 ```
 
-
+Load the data
 ```{r}
-data_2014 <-read.csv("../Data/Processed data/data_2014_5130.csv")
 data_5130 <-read.csv("../Data/Processed data/data_5130.csv")
 ```
 
 
-
-```{r}
-ggmap(get_stamenmap(bbox = c(right = 12, left = 8, top = 58, bottom = 54)))
-```
-
-
-map_data <-  data_5130[data_5130$site == 4531,] %>%  select(longtitude, latitude, longtitude_mean_site, latitude_mean_site)
-x_min <- min(map_data$longtitude)
-x_max <- max(map_data$longtitude)
-y_min <-  min(map_data$latitude)
-y_max <- max(map_data$latitude)
-
-ggmap(get_stamenmap(bbox = c(left = x_min, right = x_max, bottom = y_min, top = y_max), maptype = "terrain"))
-
-
-
-
-
-map_data <-  data_5130[data_5130$site == 4527,] %>%  select(longtitude, latitude, longtitude_mean_site, latitude_mean_site)
-x_min <- min(map_data$longtitude)
-x_max <- max(map_data$longtitude)
-y_min <-  min(map_data$latitude)
-y_max <- max(map_data$latitude)
-openmap_map <-  openmap(upperLeft = c(x_min, y_max), lowerRight = c(x_max, y_min), type = "stamen-toner")
-
-```{r}
-plot(openmap_map)
-```
-
-
-
-baseUrl <- "https://api.mapbox.com/styles/v1/mapbox/dark-v9/tiles/256/{z}/{x}/{y}"
-map <- openmap(c(43.46886761482925,119.94873046875),
-	c(33.22949814144951,133.9892578125),
-		minNumTiles=4,
-		type=paste0(baseUrl,apiKey))
-plot(map)
-
-
-
-```{r}
-data_2014 <- convert_to_longlat(data_2014, data_2014$UTMx, data_2014$UTMy)
-```
-
+Get the long lat values for each plot
 ```{r}
 data_5130 <- convert_to_longlat(data_5130, data_5130$UTMx, data_5130$UTMy)
 ```
@@ -110,6 +70,50 @@ ggplot(map1)+
   coord_map() + 
   geom_point(data = data_5130, aes(y=latitude, x = longtitude, colour = factor(year)), alpha = .9, size =2) +
   geom_text_repel(data  = mean_site_pos, aes(y=latitude_mean_site, x = longtitude_mean_site, label=site),hjust=0, vjust=0)
+```
+
+Save the changes
+```{r}
+write.csv(data_5130, file = "../Data/Processed data//data_5130.csv", row.names=FALSE)
+```
+
+
+
+```{r}
+animation_map <- function(data_frame_in, longtitude, latitude, index, time, duration_time = 15) {
+  library(ggplot2)
+  library(gifski)
+  library(png)
+  index <- deparse(substitute(index))
+  time <- deparse(substitute(time))
+  latitude <- deparse(substitute(latitude))
+  longtitude <- deparse(substitute(longtitude))
+  
+  map_ani <-  ggplot(map1)+ 
+  geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") +
+  coord_map()
+
+map_ani <-  map_ani +
+  geom_point(data = data_frame_in, aes(y= .data[[latitude]], x = .data[[longtitude]], colour = .data[[index]]), alpha = .9, size =5) + 
+
+  scale_color_gradientn(colours = rainbow(5)) +
+  transition_states(factor(data_frame_in[[time]]), transition_length = 1, state_length = 1) +
+  labs(title = "Year: {next_state}")
+
+animate(map_ani,  nframes = 2*length(unique(data_frame_in[[time]])), duration = duration_time)
+
+}
+```
+
+
+```{r}
+animation_map(data_5130, longtitude, latitude, simple_shanon_index, year )
+```
+
+
+
+```{r} 
+
 ```
 
 

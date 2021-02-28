@@ -6,32 +6,19 @@ source("functions.r")
 
 Read the data
 
-
-
-
-
 ```{r}
-artslist <- read.csv("../../Raw data/artsliste.csv")
+data_5130 <-  read.csv("../Data/processed data/data_5130.csv")
+
 ```
 
-
-Get total observations in Cover
+Calculate simple shanon index
 ```{r}
-data_2014$total_obs <- rowSums(data_2014[,grep("Cover", names(data_2014))])
-```
-
-
-
-```{r}
-data_2014 <- simple_shanon_index(data_2014)
 data_5130 <- simple_shanon_index(data_5130)
 ```
 
 
-
-Get a yes no value if there is detected enebærbuske.
+Get a yes (1) no (0) value if there is detected a enebærbuske.
 ```{r}
-data_2014$enebær <- ifelse(rowSums(data_2014[, grep(paste(c(find_art_nr("Juniperus", latin =  TRUE)[,1]), collapse="|"), names(data_2014))]) > 0,1,0)
 
 data_5130$enebær <- ifelse(rowSums(data_5130[, grep(paste(c(find_art_nr("Juniperus", latin =  TRUE)[,1]), collapse="|"), names(data_5130))]) > 0,1,0)
 ```
@@ -41,10 +28,50 @@ data_5130$enebær <- ifelse(rowSums(data_5130[, grep(paste(c(find_art_nr("Junipe
 find_art_nr("Juniperus", latin =  TRUE)
 ```
 
+diversitet:
+
+```{r}
+library(fitdistrplus)
+```
+
+
+```{r}
+a <- sum(data_5130$X7180Cover) +1 -1
+b <- length(data_5130$X7180Cover) * 16
+```
+
+
+```{r}
+x_points = seq(0,1, len = 10000)
+plot(x_points, dbeta(x_points, shape1 = (b-a)/b, shape2 = a/b))
+```
+
+
+
+
+
+```{r}
+x <-  (data_5130$X7180Cover[data_5130$X7180Cover > 0]-0.01)/16
+fit1 <- fitdist(x, "beta")
+```
+
+
+```{r}
+fit1$estimate[1]
+fit1$estimate[2]
+```
+
+
+```{r}
+plot(x_points, dbeta(x_points, shape1 =  0.5, shape2 = fit1$estimate[2]), ylim = c(0,5))
+```
+
+
+
 
 Save the changes
+
 ```{r}
-write.csv(data_2014, file = "../Data/Processed data//data_2014_5130.csv", row.names=FALSE)
 write.csv(data_5130, file = "../Data/Processed data//data_5130.csv", row.names=FALSE)
 ```
 

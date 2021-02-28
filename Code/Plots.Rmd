@@ -19,7 +19,7 @@ ggplot(data = data_2014, mapping = aes(x = antalarter, y = shanon_index, group =
 ```
 
 ```{r}
-ggplot(mapping =  aes( x = data_2014[,grep("X2020Cover", names(data_2014))]/16)) + 
+ggplot(mapping =  aes( x = data_5130[,grep("X7180Cover", names(data_5130))]/16)) + 
   geom_histogram()
 ```
 

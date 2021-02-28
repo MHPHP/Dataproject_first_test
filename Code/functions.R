@@ -11,16 +11,19 @@ simple_shanon_index <- function(data_frame_input){
 # find number for a species
 find_art_nr <- function(name, latin = FALSE) {
   if (latin == TRUE) {
-    artslist <- read.csv("../../Raw data/artsliste.csv")
-    return(artslist[grep(name, artslist$LatArt),])
+    artsliste <- read.csv("../Data/Raw data/artsliste.csv")
+    return(artsliste[grep(name, artsliste$LatArt),])
   }
   else {
-    return(artslist[grep(name, artslist$NavnDansk),])
+    return(artsliste[grep(name, artsliste$NavnDansk),])
   }
 }
 
 
 convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
+  #Load Libraries
+  library(sp)
+  
   # Create a new data frame with only the UTM data
   df <- data.frame(UTMx, UTMy)
   # turn na to 0 for calculations and save which points are na
@@ -45,3 +48,35 @@ convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
   
   return(data_frame_input)
 }
+
+
+
+
+
+# Make animation
+animation_map <- function(data_frame_in, longtitude, latitude, index, time, duration_time = 15) {
+  library(ggmap)
+  library(ggplot2)
+  library(gifski)
+  library(png)
+  index <- deparse(substitute(index))
+  time <- deparse(substitute(time))
+  latitude <- deparse(substitute(latitude))
+  longtitude <- deparse(substitute(longtitude))
+  
+  map_ani <-  ggplot(map1)+ 
+    geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") +
+    coord_map()
+  
+  map_ani <-  map_ani +
+    geom_point(data = data_frame_in, aes(y= .data[[latitude]], x = .data[[longtitude]], colour = .data[[index]]), alpha = .9, size =5) + 
+    
+    scale_color_gradientn(colours = rainbow(5)) +
+    transition_states(factor(data_frame_in[[time]]), transition_length = 1, state_length = 1) +
+    labs(title = "Year: {next_state}")
+  
+  animate(map_ani,  nframes = 2*length(unique(data_frame_in[[time]])), duration = duration_time)
+  
+}
+
+
