@@ -1,0 +1,188 @@
+---
+title: "Funktion til projekt"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include = FALSE}
+library(tidyverse)
+library(ggplot2)
+library(janitor)
+library(fitdistrplus)
+library(MASS)
+library(VGAM)
+```
+
+Read data
+```{r}
+cover <- read.csv("alledata-cover.csv")
+
+frekvens <- read.csv("alledata-frekvens.csv")
+
+abiotiske <- read.csv("alledata-abiotiske.csv")
+```
+
+
+Estimer betafordeling. Til at estimerer denne kigger vi kun på én naturtype men alle sites og alle år
+```{r}
+cover_data <- cover[abiotiske$terhabtype == "{5130}",]
+```
+
+
+Tager her frekvensdata og vil kun se på de arter/planter, der har minimum én frekvens obs i et af plottene (henover alle sites)
+
+```{r}
+frekvens_data <- frekvens[abiotiske$terhabtype == "{5130}",]
+
+frekvens_med_obs <- frekvens_data
+
+for (ele in colnames(frekvens_data)){
+  if (sum(frekvens_data[,ele]) == 0){
+    frekvens_med_obs <- frekvens_med_obs[,!(names(frekvens_med_obs) %in% ele)]
+  }
+}
+```
+
+
+Jeg vil også kun se på de arter i cover_data, der optræder i frekvens_med_obs data.
+```{r}
+w <- colnames(frekvens_med_obs)
+cover_data_med_obs <- cover_data
+
+
+for (ele in colnames(cover_data)){
+  if (!(ele %in% w)){
+  cover_data_med_obs <- cover_data_med_obs[,!(names(cover_data_med_obs) %in% ele)]
+  }
+  }
+```
+
+
+
+
+Til en start fjerner jeg de arter, der ikke har nogen 
+```{r}
+df <- cover_data_med_obs
+
+for (ele in colnames(cover_data_med_obs)){
+  if (sum(cover_data_med_obs[,ele]) == 0){
+    df <- df[,!(names(df) %in% ele)]
+  }
+}
+```
+
+
+
+
+starter med at se på x116 - her ligner det, at der er mange pin-point obs
+```{r}
+x <- df[,"X116"]/16
+x <- x[!(x==0)]
+x
+```
+
+```{r}
+x <- ifelse(x == 1, 0.999999,x)
+x
+```
+
+
+```{r}
+fit <- fitdist(x, "beta")
+fit
+```
+
+
+```{r}
+plot(fit)
+```
+
+
+beta(a,b)*binomial(n = 17, ss = 1)
+
+Betabinomial ~ Beta(1+a,17+b)
+
+```{r}
+curve(dbeta(x,1+0.7261558,34+0.6688477))
+abline(v = 0.04634392, col = "red")
+
+```
+
+
+```{r}
+(1+0.3-1)/(17+0.3-2)
+```
+
+
+
+A = 1+0.7261558, B = 17+0.6688477
+
+
+```{r}
+0.7261558/(0.7261558+0.6688477)
+```
+
+
+
+
+
+
+
+
+
+
+Shannon index inden vi gør noget
+```{r}
+df$Total <- rowSums(df[,4:144])
+```
+
+```{r}
+df$Shannon_index <- rowSums(-df[,4:144]/df$Total*log(df[,4:144]/df$Total), na.rm = TRUE )
+```
+
+
+
+laver for hver art betabinomial estimat for cover
+```{r}
+df1 <- df[,1:144]
+
+```
+
+```{r}
+for (ele in colnames(df[,4:144])){
+  x <- df[,ele]/16
+  x <- x[!(x==0)]
+  
+  x <- ifelse(x == 1, 0.999,x)
+
+  if (length(x) > 1){
+  
+    fit <- fitdist(x, "beta")
+    v <- data.frame(fit$estimate)[1,1]/(16+data.frame(fit$estimate)[2,1]-2) #mode 
+    print(v)
+    df1$ele <- ifelse(df1$ele == 0, v, df1$ele)
+  }
+}
+```
+
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

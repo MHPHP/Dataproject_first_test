@@ -117,6 +117,56 @@ animation_map(data_5130, longtitude, latitude, simple_shanon_index, year )
 ```
 
 
+Open street map
+
+```{r}
+map_bing <- openmap(c(53.38332836757155,-130.517578125),c(15.792253570362446,-67.939453125),4,'bing')
+plot.OpenStreetMap(map_bing)
+```
 
 
+```{r}
+map_data <-  data_5130[data_5130$site == 4531,] %>%  select(longtitude, latitude, longtitude_mean_site, latitude_mean_site)
+```
+
+
+```{r}
+x_min <- min(map_data$longtitude)
+x_max <- max(map_data$longtitude)
+y_min <-  min(map_data$latitude)
+y_max <- max(map_data$latitude)
+
+x_min_proj <-  x_min - (x_max - x_min) *0.2
+x_max_proj <-  x_max + (x_max - x_min) *0.2
+
+y_min_proj <-  y_min - (y_max - y_min) *0.2
+y_max_proj <-  y_max + (y_max - y_min) *0.2
+
+lat_mean <-  map_data$latitude_mean_site[1]
+long_mean <- map_data$longtitude_mean_site[1]
+
+max_diff <- (max((x_max - x_min), (y_max - y_min)))/2
+
+x_min_proj2 <- min(x_min - (x_max - x_min) *0.2, long_mean- max_diff)
+x_max_proj2 <- max(x_max + (x_max - x_min) *0.2, long_mean + max_diff)
+
+y_min_proj2 <- min(y_min - (y_max - y_min) *0.2, lat_mean- max_diff)
+y_max_proj2 <-  max(y_max + (y_max - y_min) *0.2, lat_mean + max_diff)
+
+map_test <- openmap(c(y_max_proj2,x_min_proj2),c(y_min_proj2,x_max_proj2),zoom = NULL,'bing')
+```
+
+```{r}
+map_test2 <- openproj(map_test, projection = "+proj=longlat")
+```
+
+
+```{r}
+OpenStreetMap::autoplot.OpenStreetMap(map_test2) + geom_point(data = map_data, mapping = aes(x = longtitude, y = latitude), color = "red", size = 4)
+```
+
+```{r}
+map_test <- openmap(c(y_max,x_min),c(y_min,x_max),zoom = NULL,'bing')
+OpenStreetMap::autoplot.OpenStreetMap(map_test)
+```
 

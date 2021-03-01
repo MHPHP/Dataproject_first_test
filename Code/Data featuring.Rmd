@@ -51,19 +51,185 @@ plot(x_points, dbeta(x_points, shape1 = (b-a)/b, shape2 = a/b))
 
 
 ```{r}
-x <-  (data_5130$X7180Cover[data_5130$X7180Cover > 0]-0.01)/16
+x <-  (data_5130$X7180Cover[data_5130$X7180Cover > 0]-0.5)/16
 fit1 <- fitdist(x, "beta")
 ```
 
 
 ```{r}
-fit1$estimate[1]
-fit1$estimate[2]
+a <-  fit1$estimate[1]
+b <-  fit1$estimate[2]
+a/(a+b+1)
+```
+
+```{r}
+c <-  names(data_5130[, grep("Cover",names(data_5130))])
+data_5130$tmp_total <- rowSums(data_5130[, grep("Cover",names(data_5130))])
+```
+
+
+
+```{r}
+for (i in colnames(data_5130[, grep("Cover",names(data_5130))])) {
+  t <-data_5130[[paste0(str_remove(i, "Cover"), "Frekvens")]]
+  
+}
 ```
 
 
 ```{r}
-plot(x_points, dbeta(x_points, shape1 =  0.5, shape2 = fit1$estimate[2]), ylim = c(0,5))
+
+df <- data.frame(matrix(ncol = 4, nrow = 0))
+x <- c("species","a", "b", "mean_p")
+colnames(df) <- x
+
+for (i in colnames(data_5130[, grep("Cover",names(data_5130))])) {
+  x <- (data_5130[[i]][data_5130[[i]] > 0]-0.5)/16
+  if (length(x) > 1) {
+    fit1 <- fitdist(x, "beta")
+    a <-  fit1$estimate[1]
+    b <-  fit1$estimate[2]
+    mean_value <- a/(a+b+1)
+    df[nrow(df) +1 ]$a <- a
+  }
+}
+```
+
+```{r}
+t
+```
+
+
+```{r}
+for (row in nrow(data_5130)) {
+  
+}
+```
+
+
+
+
+
+
+```{r}
+beta_shanon_index1 <- function(data_frame_input){
+  data_frame_input$beta_shanon_index1 <- rowSums(-data_frame_input[, grep("Cover", names(data_frame_input))]/
+                                                    (rowSums(data_frame_input[,grep("Cover", names(data_frame_input))])) *
+                                                    log(data_frame_input[, grep("Cover", names(data_frame_input))]/
+                                                          (rowSums(data_frame_input[,grep("Cover", names(data_frame_input))]))), na.rm = TRUE
+```
+
+Get the data ready in the form of two data frames, one with cover data and one with frekvens data.
+```{r}
+cover_data1 <-  data_5130[, grep("Cover", names(data_5130))]
+colnames(cover_data1) <- gsub("Cover", "", colnames(cover_data1))
+
+frekvens_data1 <-  data_5130[, grep("Frekvens", names(data_5130))]
+colnames(frekvens_data1) <- gsub("Frekvens", "", colnames(frekvens_data1))
+```
+
+
+
+```{r}
+
+
+
+# inpu is cover data and frekvens data as two data frames, where the rows match for the same observation, and the names of the species match.
+shanon_index_v1 <- function(cover_data, frekvens_data) {
+  #create data frame to hold the fitted values for each species
+  beta_fit <- data.frame(matrix(ncol = 3, nrow = 0))
+  x <- c("species","a", "b")
+  colnames(beta_fit) <- x
+  
+  # for Each species calculate the shape parameter for the fitted beta distribution and save them in a data frame.
+  for (specie in colnames(cover_data)) {
+    beta_data <- cover_data[,specie]/16
+    beta_data <- beta_data[!(beta_data == 0)]
+    
+    beta_data <-  ifelse(beta_data == 1, 0.9999, beta_data)
+    
+    if (length(unique( beta_data)) > 1) {
+      beta_data_fitted <- fitdist(beta_data, "beta")
+      beta_fit[nrow(beta_fit) + 1,] <- c(specie, beta_data_fitted$estimate[1], beta_data_fitted$estimate[2])
+      
+    }
+  }
+   
+    # for each plot create a list with all the cover data and a total of how may obersevations.
+    shanon_list <- c()
+    
+    for (row in 1:nrow(cover_data)) {
+      total_cover_obs <- sum(cover_data[row,]) #is not currently used
+      # Create a list with all the Cover data greater than 0 for a given row
+      all_obs <- cover_data[row,] 
+      all_obs <- all_obs[all_obs > 0]/16
+      
+      # for a given row, find out what species is found in frekvens
+      species_spotted_in_frekvens <- colnames(frekvens_data1[c(frekvens_data1[row,]  == 1)])
+      
+      #For each species spotten in frekvens but not in cover, appends its posterior cover to the cover data for that row
+      for (species_spotted in species_spotted_in_frekvens ) {
+        if (length(cover_data[[species_spotted]][row]) == 1 && cover_data[[species_spotted]][row] == 0) {
+          
+          all_obs <- append(all_obs, (as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) + 1 -1)/
+                                     (as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) +
+                                      as.numeric(beta_fit[beta_fit$species == species_spotted,]$b) + 17 -2))
+          
+          total_cover_obs <- total_cover_obs +1
+        }
+        
+
+      }
+      
+     #Calculate the shanon value and append it to a list
+     total_cover <- sum(all_obs)
+     shanon_value <- -sum(all_obs/total_cover * log((all_obs/total_cover)))
+        
+      shanon_list <- append(shanon_list,shanon_value)  
+      
+    }
+    return(shanon_list)
+}
+```
+
+
+```{r}
+data_5130$shanon_index_v1 <-  shanon_index_v1(cover_data1, frekvens_data1)
+```
+
+
+
+
+
+```{r}
+k <-  cover_data1[1,]
+k <- k[k > 0]
+```
+
+```{r}
+df[2,] <- c(2,3,4,5)
+```
+
+```{r}
+df[df$species == 2,]$a + 1
+```
+
+
+```{r}
+df$species == 1
+```
+
+```{r}
+for (e in t){
+  print(cover_data1[[e]][1])
+}
+```
+
+
+
+
+```{r}
+shanon_index(cover_data1, frekvens_data1)
 ```
 
 
