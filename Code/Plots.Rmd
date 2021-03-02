@@ -1,9 +1,6 @@
 
 ```{r}
 library(tidyverse)
-library(fitdistrplus)
-library(MASS)
-library(VGAM)
 ```
 
 
@@ -50,5 +47,23 @@ ggplot(data = data_5130, mapping = aes(x = as.numeric(enebær5md), y = simple_sh
 
 ```{r}
 lm(data_5130$simple_shanon_index ~ as.numeric(data_5130$enebær5md ))
+```
+
+
+
+
+Diversitets plots, different indexes.
+
+
+```{r}
+ggplot(data = data_5130, mapping = aes(x = simple_shanon_index, y = shanon_index_v1)) +
+  geom_point(aes(color = factor(year)), size = 2)
+```
+
+A boxplot comparing the difference between the simple shanon index and shanon index v1
+
+```{r}
+ggplot(data = data_5130, mapping = aes(x = factor(year), y = (shanon_index_v1 - simple_shanon_index)))+ 
+  geom_boxplot()
 ```
 

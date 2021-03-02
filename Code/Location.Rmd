@@ -79,35 +79,9 @@ write.csv(data_5130, file = "../Data/Processed data//data_5130.csv", row.names=F
 
 
 
-```{r}
-animation_map <- function(data_frame_in, longtitude, latitude, index, time, duration_time = 15) {
-  library(ggplot2)
-  library(gifski)
-  library(png)
-  index <- deparse(substitute(index))
-  time <- deparse(substitute(time))
-  latitude <- deparse(substitute(latitude))
-  longtitude <- deparse(substitute(longtitude))
-  
-  map_ani <-  ggplot(map1)+ 
-  geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") +
-  coord_map()
-
-map_ani <-  map_ani +
-  geom_point(data = data_frame_in, aes(y= .data[[latitude]], x = .data[[longtitude]], colour = .data[[index]]), alpha = .9, size =5) + 
-
-  scale_color_gradientn(colours = rainbow(5)) +
-  transition_states(factor(data_frame_in[[time]]), transition_length = 1, state_length = 1) +
-  labs(title = "Year: {next_state}")
-
-animate(map_ani,  nframes = 2*length(unique(data_frame_in[[time]])), duration = duration_time)
-
-}
-```
-
 
 ```{r}
-animation_map(data_5130, longtitude, latitude, simple_shanon_index, year )
+animation_map(data_5130, longtitude, latitude, shanon_index_v1, year )
 ```
 
 
@@ -118,11 +92,6 @@ animation_map(data_5130, longtitude, latitude, simple_shanon_index, year )
 
 
 Open street map
-
-```{r}
-map_bing <- openmap(c(53.38332836757155,-130.517578125),c(15.792253570362446,-67.939453125),4,'bing')
-plot.OpenStreetMap(map_bing)
-```
 
 
 ```{r}

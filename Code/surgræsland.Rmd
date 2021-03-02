@@ -1,0 +1,51 @@
+
+```{r}
+library(tidyverse)
+library(fitdistrplus)
+source("functions.r")
+
+```
+
+Load the data
+
+```{r}
+data_6230 <- read.csv(file ="../Data/Processed data//data_6230.csv" )
+```
+
+
+get the cover and the frekvens data
+```{r}
+cover_data1 <-  data_6230[, grep("Cover", names(data_6230))]
+colnames(cover_data1) <- gsub("Cover", "", colnames(cover_data1))
+
+frekvens_data1 <-  data_6230[, grep("Frekvens", names(data_6230))]
+colnames(frekvens_data1) <- gsub("Frekvens", "", colnames(frekvens_data1))
+```
+
+
+
+Find the index
+```{r}
+data_6230$shanon_index_v1 <- shanon_index_v1(cover_data1, frekvens_data1)
+```
+
+```{r}
+write.csv(data_6230, file = "../Data/Processed data//data_6230.csv" , row.names=FALSE)
+```
+
+
+
+Animation
+
+
+```{r}
+data_6230 <- convert_to_longlat(data_6230, data_6230$UTMx, data_6230$UTMy)
+```
+
+```{r}
+animation_map(data_6230, longtitude, latitude, shanon_index_v1, year )
+```
+```{r}
+data_6230$simple_shanon_index <- simple_shanon_index(data_6230)
+```
+
