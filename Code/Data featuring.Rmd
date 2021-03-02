@@ -74,6 +74,89 @@ mean(data_5130_site_ag$diff)
 
 Jeg får værdien man skal give ved den naive metode hvis man i gennemsnit skal få de værider 0.67, dvs ret højt.
 
+
+
+
+
+
+Test something
+
+
+```{r}
+# input is cover data and frekvens data as two data frames, where the rows match for the same observation, and the names of the species match.
+shanon_index_v1_beta_data <- function(cover_data, frekvens_data) {
+  
+  #Load functions 
+  library(tidyverse)
+  library(fitdistrplus)
+  
+  #create data frame to hold the fitted values for each species
+  beta_fit <- data.frame(matrix(ncol = 3, nrow = 0))
+  x <- c("species","a", "b")
+  colnames(beta_fit) <- x
+  
+  # for Each species calculate the shape parameter for the fitted beta distribution and save them in a data frame.
+  for (specie in colnames(cover_data)) {
+    beta_data <- cover_data[,specie]/16
+    beta_data <- beta_data[!(beta_data == 0)]
+    
+    beta_data <-  ifelse(beta_data == 1, 0.9999, beta_data)
+    
+    if (length(unique( beta_data)) > 1) {
+      beta_data_fitted <- fitdist(beta_data, "beta")
+      beta_fit[nrow(beta_fit) + 1,] <- c(specie, beta_data_fitted$estimate[1], beta_data_fitted$estimate[2])
+      
+    }
+  }
+  
+  # for each plot create a list with all the cover data and a total of how may obersevations.
+  shanon_list <- c()
+  
+  for (row in 1:nrow(cover_data)) {
+    total_cover_obs <- sum(cover_data[row,]) #is not currently used
+    # Create a list with all the Cover data greater than 0 for a given row
+    all_obs <- cover_data[row,] 
+    all_obs <- all_obs[all_obs > 0]/16
+    obs
+    # for a given row, find out what species is found in frekvens
+    species_spotted_in_frekvens <- colnames(frekvens_data[c(frekvens_data[row,]  == 1)])
+    
+    #For each species spotten in frekvens but not in cover, appends its posterior cover to the cover data for that row
+    for (species_spotted in species_spotted_in_frekvens ) {
+      if (length(cover_data[[species_spotted]][row]) == 1 && cover_data[[species_spotted]][row] == 0) {
+        
+        all_obs <- append(all_obs, (as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) + 1 -1)/
+                            (as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) +
+                               as.numeric(beta_fit[beta_fit$species == species_spotted,]$b) + 17 -2))
+        
+        total_cover_obs <- total_cover_obs +1
+      }
+      
+      
+    }
+    
+    #Calculate the shanon index value and append it to the list
+    total_cover <- sum(all_obs)
+    shanon_value <- -sum(all_obs/total_cover * log((all_obs/total_cover)))
+    
+    shanon_list <- append(shanon_list,shanon_value)  
+    
+  }
+  return(beta_fit)
+}
+```
+
+
+```{r}
+beta_data$mode <- as.numeric(beta_data$a)/(as.numeric(beta_data$a) + as.numeric(beta_data$b) +15)
+```
+
+```{r}
+beta_data <-  shanon_index_v1_beta_data(cover_data1, frekvens_data1)
+mean(beta_data$mode)*16
+```
+
+
 Save the changes
 
 ```{r}

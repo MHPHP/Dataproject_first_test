@@ -1,0 +1,50 @@
+```{r}
+library(VGAM)
+library(inl)
+```
+
+```{r}
+bdata <- data.frame(N = 10, mu = 0.5, rho = 0.8)
+bdata <- transform(bdata,
+                   y = rbetabinom(100, size = N, prob = mu, rho = rho))
+fit <- vglm(cbind(y, N-y) ~ 1, betabinomial, data = bdata, trace = TRUE)
+coef(fit, matrix = TRUE)
+Coef(fit)
+head(cbind(depvar(fit), weights(fit, type = "prior")))
+```
+
+```{r}
+fit <- vglm(cbind(R, N-R) ~ 1, betabinomial, lirat,
+            trace = TRUE, subset = N > 1)
+coef(fit, matrix = TRUE)
+Coef(fit)
+t(fitted(fit))
+t(depvar(fit))
+t(weights(fit, type = "prior"))
+```
+
+
+```{r}
+install.packages("INLA",repos=c(getOption("repos"),INLA="https://inla.r-inla-download.org/R/stable"), dep=TRUE)
+library(INLA)
+```
+
+
+```{r}
+## overdispersion parameter in the betabinomial
+rho = 0.7
+n = 1000
+z = rnorm(n, sd=0.2)
+Ntrials = sample(1:10, n, replace=TRUE)
+eta = 1 + z
+p.eta = exp(eta)/(1+exp(eta))
+a = p.eta * (1-rho)/rho
+b = (p.eta * rho - p.eta - rho + 1)/rho
+p = rbeta(n, a, b)
+y = rbinom(n, Ntrials, p)
+formula = y ~ 1 + z
+data = data.frame(y, z)
+r = inla(formula, data = data,family = "betabinomial", Ntrials=Ntrials)
+summary(r)
+```
+
