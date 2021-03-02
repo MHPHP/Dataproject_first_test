@@ -1,0 +1,101 @@
+---
+title: "Projekt1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+load data
+```{r}
+cover <- read.csv("alledata-cover.csv")
+
+frekvens <- read.csv("alledata-frekvens.csv")
+
+abiotiske <- read.csv("alledata-abiotiske.csv")
+```
+
+
+```{r}
+cover_data <- cover[abiotiske$terhabtype == "{5130}",]
+frekvens_data <- frekvens[abiotiske$terhabtype == "{5130}",]
+
+```
+
+
+NAIVE MODEL
+Hvis cover_data er nul, men frekvens_data er 1, så giver vi en lille værdi (konstant) til den celle i cover_data. Jeg summer her shannon index for hvert site
+
+```{r}
+naive_model <- function(cover, frekvens, konstant){
+  
+  library(tidyverse)
+
+  names_no_loop <- c("site", "plot", "year")
+  names_to_loop <- setdiff(colnames(frekvens),names_no_loop)
+  
+  frekvens_obs <- frekvens
+
+  for (ele in names_to_loop){
+    if (sum(frekvens[,ele]) == 0){
+      frekvens_obs <- frekvens_obs[,!(names(frekvens_obs) %in% ele)]
+    }
+  }
+  
+  cover_obs <- cover
+  
+  for (ele in colnames(cover)){
+    if (!(ele %in% colnames(frekvens_obs))){
+      cover_obs <- cover_obs[,!(names(cover_obs) %in% ele)]
+    }
+  }
+  
+  #opdatere cover data de steder hvor dette er nul og frekvens én
+  
+  names_to_loop <- setdiff(colnames(cover_obs),names_no_loop)
+  
+  for (i in rownames(cover_obs)){
+    for (j in names_to_loop){
+      
+      if (cover_obs[i,j] == 0 & frekvens_obs[i,j] == 1 ){
+        
+        cover_obs[i,j] <- konstant
+        
+      }
+      
+    }
+  }
+  
+  n <- length(colnames(cover_obs))
+  
+  cover_obs$Total <- rowSums(cover_obs[,4:n])
+  cover_obs$Shannon_index <-
+    rowSums(-cover_obs[,4:n]/cover_obs$Total*log(cover_obs[,4:n]/cover_obs$Total), 
+            na.rm = TRUE)
+
+  df <- cover_obs %>% group_by(site) %>% summarise("Shannon index" = mean(Shannon_index)) 
+  
+  return(df)
+  
+}
+```
+
+
+
+```{r}
+df_0 <- naive_model(cover_data,frekvens_data, 0)
+df_1 <- naive_model(cover_data,frekvens_data, 1/64)
+df <- cbind(df_0,df_1)
+df
+```
+
+
+
+
+
+
+
+
+
+

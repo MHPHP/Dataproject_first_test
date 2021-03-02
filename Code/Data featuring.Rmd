@@ -35,12 +35,21 @@ diversitet:
 
 Get the data ready in the form of two data frames, one with cover data and one with frekvens data.
 ```{r}
+data_5130_site <- data_5130[, c("plot", "site", "year")]
+
 cover_data1 <-  data_5130[, grep("Cover", names(data_5130))]
 colnames(cover_data1) <- gsub("Cover", "", colnames(cover_data1))
 
 frekvens_data1 <-  data_5130[, grep("Frekvens", names(data_5130))]
 colnames(frekvens_data1) <- gsub("Frekvens", "", colnames(frekvens_data1))
 ```
+
+
+```{r}
+cover_data <-  cbind(data_5130_site , cover_data1)
+frekvens_data <- cbind(data_5130_site, frekvens_data1)
+```
+
 
 Use shanon index v1 to find the shanon index
 ```{r}
@@ -49,6 +58,19 @@ data_5130$shanon_index_v1 <-  shanon_index_v1(cover_data1, frekvens_data1)
 
 
 
+```{r}
+naive_site <-  naive_model(cover_data, frekvens_data, 0.67)
+
+data_5130_lim <- data_5130[,c("site", "year", "simple_shanon_index", "longtitude_mean_site", "latitude_mean_site", "shanon_index_v1")]
+
+data_5130_site_ag <- aggregate.data.frame(data_5130_lim, by = list(data_5130$site), FUN = mean)
+
+data_5130_site_ag <- merge(data_5130_site_ag, naive_site)
+
+data_5130_site_ag$diff <- data_5130_site_ag$shanon_index_v1 - data_5130_site_ag$`Shannon index`
+
+mean(data_5130_site_ag$diff)
+```
 
 
 
