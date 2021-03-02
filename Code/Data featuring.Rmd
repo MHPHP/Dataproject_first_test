@@ -56,7 +56,7 @@ Use shanon index v1 to find the shanon index
 data_5130$shanon_index_v1 <-  shanon_index_v1(cover_data1, frekvens_data1)
 ```
 
-
+Sammenligner den naive metode med beta binomial metode.
 
 ```{r}
 naive_site <-  naive_model(cover_data, frekvens_data, 0.67)
@@ -72,7 +72,7 @@ data_5130_site_ag$diff <- data_5130_site_ag$shanon_index_v1 - data_5130_site_ag$
 mean(data_5130_site_ag$diff)
 ```
 
-
+Jeg får værdien man skal give ved den naive metode hvis man i gennemsnit skal få de værider 0.67, dvs ret højt.
 
 Save the changes
 
