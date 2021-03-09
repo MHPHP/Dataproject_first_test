@@ -48,3 +48,16 @@ r = inla(formula, data = data,family = "betabinomial", Ntrials=Ntrials)
 summary(r)
 ```
 
+
+
+```{r}
+a <- c(1,2)
+print(exp(a))
+```
+
+```{r}
+b  <- c("a", "b")
+d <- c("e",b)
+print(d)
+```
+

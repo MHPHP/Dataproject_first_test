@@ -156,3 +156,152 @@ shanon_index_v1 <- function(cover_data, frekvens_data) {
   return(shanon_list)
 }
 
+
+
+
+shanon_index_v2 <- function(cover_data, frekvens_data) {
+  
+  #Load functions 
+  library(tidyverse)
+  library(fitdistrplus)
+  
+  #create data frame to hold the fitted values for each species
+  beta_fit <- data.frame(matrix(ncol = 3, nrow = 0))
+  x <- c("species","a", "b")
+  colnames(beta_fit) <- x
+  
+  # for Each species calculate the shape parameter for the fitted beta distribution and save them in a data frame.
+  for (specie in colnames(cover_data)) {
+    beta_data <- cover_data[,specie]/16
+    
+    #remove all plots with 0 in cover or remove all plots with 0 in frekvens.
+    #beta_data <- beta_data[!(beta_data == 0)]  
+    beta_data <- beta_data[!(frekvens_data[[specie]] == 0)]
+    
+    
+    if (length(unique( beta_data)) > 1) {
+      beta_data_fitted <- fitdist(beta_data, "beta", method = "mme")
+      beta_fit[nrow(beta_fit) + 1,] <- c(specie, beta_data_fitted$estimate[1], beta_data_fitted$estimate[2])
+      
+    }
+  }
+  
+  # for each plot create a list with all the cover data and a total of how may obersevations.
+  shanon_list <- c()
+  
+  for (row in 1:nrow(cover_data)) {
+    total_cover_obs <- sum(cover_data[row,]) #is not currently used
+    # Create an empty list for a given row
+    all_obs <- cover_data[1,]
+    all_obs <- 0
+    
+    # for a given row, find out what species is found in frekvens
+    species_spotted_in_frekvens <- colnames(frekvens_data[c(frekvens_data[row,]  == 1)])
+    
+    #For each species spotten in frekvens, appends its posterior cover to the cover data for that row
+    for (species_spotted in species_spotted_in_frekvens ) {
+      if (length(cover_data[[species_spotted]][row]) == 1) {
+        
+        alpha_post <- as.numeric((as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) +
+                                    as.numeric(cover_data[[species_spotted]][row]) ))
+        beta_post <-  as.numeric(beta_fit[beta_fit$species == species_spotted,]$b) + 16 - as.numeric(cover_data[[species_spotted]][row])
+        
+        all_obs <- append(all_obs, (alpha_post)/(alpha_post+beta_post))
+        
+        
+      }
+      
+    }
+    
+    #Calculate the shanon index value and append it to the list after normalizing and removing zeroes
+    total_cover <- sum(all_obs)
+    all_obs <- all_obs[!(all_obs == 0)]
+    shanon_value <- -sum(all_obs/total_cover * log((all_obs/total_cover)))
+    
+    shanon_list <- append(shanon_list,shanon_value)  
+    
+  }
+  return(shanon_list)
+}
+
+
+site_aggregate <- function(data, aggregate_list, aggregate_function = mean) {
+  # Calculate mean site position 
+  mean_site_position <-  data %>%
+    group_by(site) %>% 
+    summarise_at(vars(longtitude, latitude), mean, na.rm = TRUE)
+  
+  # rename coordinates
+  #mean_site_position <-  rename(mean_site_position, longtitude_mean_site = longtitude, latitude_mean_site = latitude)
+  
+  # Aggrgate the selected data
+  aggregate_list <- c("site", "year", aggregate_list)
+  
+  site_data <- data[,aggregate_list ]
+  site_data2 <- aggregate.data.frame(site_data, by = list(site_data$site, site_data$year), FUN = aggregate_function)[,aggregate_list]
+  
+  #Count how many plots there is in each site for each year
+  count_data <- site_data %>% count(site, year)
+  count_data <-  rename(count_data, observations = n )
+  
+  # Merge the aggregated data with the position of the site and the count data
+  final_data <-left_join(site_data2 ,mean_site_position, by = "site")
+  final_data <- left_join(final_data, count_data, by = c("site", "year"))
+  return (final_data)
+}
+
+
+
+create_terhab_data <- function(terhabtype, cover =NULL, frekvens = NULL, abiotiske = NULL, artslist = NULL, traits = NULL, cover_taxa = NULL, frekvens_taxa = NULL  ) {
+  
+  # if no data is provided, Load the data
+  if (is.null(cover)) {
+    cover <- read.csv("../../Raw data/alledata-cover.csv")
+  }
+  if (is.null(frekvens)) {
+    frekvens <- read.csv("../../Raw data/alledata-frekvens.csv")
+  }
+  if (is.null(abiotiske)) {
+    abiotiske<- read.csv("../../Raw data/alledata-abiotiske.csv")
+  }
+  if (is.null(artslist)) {
+    artslist <-  read.csv("../../Raw data/artsliste.csv")
+  }
+  if (is.null(traits)) {
+    traits <- read.csv("../../Raw data/traits.csv")
+  }
+  if (is.null(cover_taxa)) {
+    cover_taxa <- read.csv("../../Raw data/alledata-cover-samletaxa.csv")
+  }
+  if (is.null(frekvens_taxa)) {
+    frekvens_taxa <- read.csv("../../Raw data/alledata-frekvens-samletaxa.csv")
+  }
+  
+  
+  #Merge All the data together
+  
+  frekvens_cover <- merge(frekvens,cover, by = c("plot","site","year"),suffixes = c("Frekvens","Cover"))
+  
+  frekvens_cover <- setNames(frekvens_cover,paste0(names(frekvens_cover),ifelse(names(frekvens_cover) %in% setdiff(names(frekvens),names(cover)),"frekvens","")))
+  
+  frekvens_cover <- setNames(frekvens_cover,paste0(names(frekvens_cover),ifelse(names(frekvens_cover) %in% setdiff(names(cover),names(frekvens)),"cover","")))
+  
+  df1 <- merge(abiotiske, frekvens_cover, by = c("plot","site","year"))
+  df1 <- merge(df1, frekvens_taxa, by = c("plot","site","year"))
+  df1 <- merge(df1, cover_taxa, by = c("plot","site","year"))
+  
+  
+  #change terhabtype input to string and the correct format
+  
+  terhabtype <- paste0("{",toString(terhabtype),"}")
+  
+  # select the choosen terhabtype
+  df2 <- df1[df1$terhabtype == terhabtype ,]
+  
+  # remove species that were not observed or variables with only missing value
+  df2 <- df2[, colSums(df2 != 0) > 0]
+  df2 <- df2[, colSums(df2 != "mv") > 0]
+  
+  return(df2)
+}
+

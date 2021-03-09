@@ -1,6 +1,7 @@
 
 ```{r}
 library(tidyverse)
+source("functions.r")
 ```
 
 
@@ -70,60 +71,6 @@ write.csv(data_5130, file = "../Data/Processed data//data_5130.csv" , row.names=
 Create a function to create datasets of terhabtype.
 
 
-
-
-```{r}
-create_terhab_data <- function(terhabtype, cover =NULL, frekvens = NULL, abiotiske = NULL, artslist = NULL, traits = NULL, cover_taxa = NULL, frekvens_taxa = NULL  ) {
-  if (is.null(cover)) {
-    cover <- read.csv("../../Raw data/alledata-cover.csv")
-  }
-  if (is.null(frekvens)) {
-    frekvens <- read.csv("../../Raw data/alledata-frekvens.csv")
-  }
-  if (is.null(abiotiske)) {
-    abiotiske<- read.csv("../../Raw data/alledata-abiotiske.csv")
-  }
-  if (is.null(artslist)) {
-    artslist <-  read.csv("../../Raw data/artsliste.csv")
-  }
-  if (is.null(traits)) {
-    traits <- read.csv("../../Raw data/traits.csv")
-  }
-  if (is.null(cover_taxa)) {
-    cover_taxa <- read.csv("../../Raw data/alledata-cover-samletaxa.csv")
-  }
-  if (is.null(frekvens_taxa)) {
-    frekvens_taxa <- read.csv("../../Raw data/alledata-frekvens-samletaxa.csv")
-  }
-  
-  
-  #Merge All the data together
-  
-  frekvens_cover <- merge(frekvens,cover, by = c("plot","site","year"),suffixes = c("Frekvens","Cover"))
-
-  frekvens_cover <- setNames(frekvens_cover,paste0(names(frekvens_cover),ifelse(names(frekvens_cover) %in% setdiff(names(frekvens),names(cover)),"frekvens","")))
-
-frekvens_cover <- setNames(frekvens_cover,paste0(names(frekvens_cover),ifelse(names(frekvens_cover) %in% setdiff(names(cover),names(frekvens)),"cover","")))
- 
-df1 <- merge(abiotiske, frekvens_cover, by = c("plot","site","year"))
-df1 <- merge(df1, frekvens_taxa, by = c("plot","site","year"))
-df1 <- merge(df1, cover_taxa, by = c("plot","site","year"))
-
-
-#change terhabtype input to string and the correct format
-
-terhabtype <- paste0("{",toString(terhabtype),"}")
-
-# select the choosen terhabtype
-df2 <- df1[df1$terhabtype == terhabtype ,]
-
-# remove species that were not observed or variables with only missing value
-df2 <- df2[, colSums(df2 != 0) > 0]
-df2 <- df2[, colSums(df2 != "mv") > 0]
-
-return(df2)
-}
-```
 
 ```{r}
 data_6230 <-  create_terhab_data(6230)

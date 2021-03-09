@@ -79,6 +79,40 @@ write.csv(data_5130, file = "../Data/Processed data//data_5130.csv", row.names=F
 
 
 
+```{r}
+site_aggregate <- function(data, aggregate_list, aggregate_function = mean) {
+  # Calculate mean site position 
+  mean_site_position <-  data %>%
+    group_by(site) %>% 
+    summarise_at(vars(longtitude, latitude), mean, na.rm = TRUE)
+  
+  # rename coordinates
+  #mean_site_position <-  rename(mean_site_position, longtitude_mean_site = longtitude, latitude_mean_site = latitude)
+  
+  # Aggrgate the selected data
+  aggregate_list <- c("site", "year", aggregate_list)
+  
+  site_data <- data[,aggregate_list ]
+  site_data2 <- aggregate.data.frame(site_data, by = list(site_data$site, site_data$year), FUN = aggregate_function)[,aggregate_list]
+  
+  #Count how many plots there is in each site for each year
+  count_data <- site_data %>% count(site, year)
+  count_data <-  rename(count_data, observations = n )
+  
+  # Merge the aggregated data with the position of the site and the count data
+  final_data <-left_join(site_data2 ,mean_site_position, by = "site")
+  final_data <- left_join(final_data, count_data, by = c("site", "year"))
+  return (final_data)
+}
+```
+
+
+```{r}
+
+site_6230 <-  site_aggregate(data_6230, c("shanon_index_v2"))
+```
+
+
 
 ```{r}
 animation_map(data_5130, longtitude, latitude, shanon_index_v1, year )
