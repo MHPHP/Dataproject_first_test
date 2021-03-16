@@ -56,8 +56,9 @@ Diversitets plots, different indexes.
 
 
 ```{r}
-ggplot(data = data_5130, mapping = aes(x = simple_shanon_index, y = shanon_index_v1)) +
-  geom_point(aes(color = factor(year)), size = 2)
+ggplot(data = data_5130, mapping = aes(y =shanon_index_v2_mme , x = simple_shanon_index)) +
+  geom_point(aes(color = factor(year)), size = 2) + 
+  geom_abline()
 ```
 
 A boxplot comparing the difference between the simple shanon index and shanon index v1

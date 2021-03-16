@@ -20,6 +20,12 @@ find_art_nr <- function(name, latin = FALSE) {
 }
 
 
+#Find name for a specie
+find_art_name <- function(nr) {
+  return(artsliste$NavnDansk[artsliste$ArtID == nr])
+}
+
+
 convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
   #Load Libraries
   library(sp)
@@ -200,7 +206,6 @@ shanon_index_v2 <- function(cover_data, frekvens_data) {
     
     #For each species spotten in frekvens, appends its posterior cover to the cover data for that row
     for (species_spotted in species_spotted_in_frekvens ) {
-      if (length(cover_data[[species_spotted]][row]) == 1) {
         
         alpha_post <- as.numeric((as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) +
                                     as.numeric(cover_data[[species_spotted]][row]) ))
@@ -208,8 +213,6 @@ shanon_index_v2 <- function(cover_data, frekvens_data) {
         
         all_obs <- append(all_obs, (alpha_post)/(alpha_post+beta_post))
         
-        
-      }
       
     }
     
