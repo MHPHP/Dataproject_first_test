@@ -415,7 +415,7 @@ shanon_index_v2_beta <- function(cover_data, frekvens_data) {
   for (specie in colnames(cover_data)) {
     beta_data <- cover_data[,specie]/16
     
-    #remove all plots with 0 in cover or remove all plots with 0 in frekvens.
+    #remove all plots with 0 in cover or remove all plots with 0 in f rekvens.
     #beta_data <- beta_data[!(beta_data == 0)]  
     beta_data <- beta_data[!(frekvens_data[[specie]] == 0)]
     

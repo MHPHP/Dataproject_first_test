@@ -1,0 +1,273 @@
+---
+title: "Dataprojekt"
+author: "Ditte, Malthe & Nikolaj"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+
+library(fitdistrplus)
+library(tidyverse)
+ library(ggmap)
+  library(ggplot2)
+  library(gifski)
+library(png)
+library(gganimate)
+```
+
+The plant diversity is often calculated by using the number of times a plant in a certain area is observed, without taking into account the knowledge we have about which plants are in the area. 
+<br>
+Since some plants may be in the area, but is not observed, we loose a lot of valuable information by using this course of action. <br>
+To solve this issue the method of pin-point data has been introduced. 
+The pin-point data consists of two different forms of datasets. One is a cover-dataset, which contains information from a given plot, about how many times a specie was hit by a pin out of n possible. The other is a frequency-dataset which contains information about whether or not a specie is to be found in the given plot indicated by a binary value (1 for found and 0 for not found). <br>
+By using a bayesian method it is possible to use the information from both the cover-dataset and the information from the frequency-dataset.
+<br><br>
+To model the number of times a specie is hit by a pin we use the binomial model:
+$$
+P(Y = y| \theta) = {n \choose y}\theta^y(1-\theta)^{n-y}
+$$
+where $n$ is the total number of pins and $y$ is the number of times the specie is hit by a pin. <br>
+The binomial model is used as a likelihood function when modeling the posterior that is used for calculating the Shannon Index in a given plot. 
+<br>
+We can create a prior $\theta$ for each specie by using both cover and frequency data. The beta model is a conjugacy prior for the binomial model and, thus, is ideal to use. The beta-model is given by 
+$$
+f(\theta) = \frac{\Gamma (\alpha+\beta)}{\Gamma (\alpha) \Gamma(\beta)}\theta^{\alpha -1}(1-\theta)^{\beta-1}
+$$
+For each specie we fit a beta-prior using all the cover data where the corresponding frequency data is 1.
+<br><br>
+Using the above we can form a posterior, that will be an updated beta distribution for each specie in each plot
+$$
+\theta | (Y = y) \sim Beta(\alpha + y, \beta + n-y)
+$$
+When the posterior distribution is found for a specie in a given plot, we use the mean posterior as a measure of the abundance for the specie in the plot. <br>
+
+The mean posterior for a Beta-distribution is given by:
+
+$$\frac{\alpha + y}{\alpha + y+\beta + n-y}$$
+
+
+
+
+We work with data only including the terhabtype = 5130 from the NOVANA dataset.
+```{r}
+cover <- read.csv("cover_data_5130.csv")
+
+freq <- read.csv("frekvens_data_5130.csv")
+
+abiotisk <- read.csv("abiotiske_data_5130.csv")
+```
+
+Cover data
+```{r}
+head(cover[,1:18])
+```
+
+In this cover data the number of inserted pins is 16. Thus, n = 16 in our beta-binomial model.
+<br>
+<br>
+Frequency data
+```{r}
+head(freq[,1:18])
+```
+
+
+Remove "site", "plot", "year"
+```{r}
+cover_data <- cover[,4:ncol(cover)]
+freq_data <- freq[,4:ncol(freq)]
+```
+
+
+Function:
+```{r}
+shanon_index_v2 <- function(cover_data, freq_data) {
+  
+  
+  
+  #create data frame to hold the fitted values for each species
+  beta_fit <- data.frame(matrix(ncol = 3, nrow = 0))
+ 
+  x <- c("species","a", "b")
+  colnames(beta_fit) <- x
+  
+  # for Each species calculate the shape parameter for the fitted beta distribution and save them in a data frame.
+  for (specie in colnames(cover_data)) {
+    beta_data <- cover_data[,specie]/16
+    
+    #remove all plots with 0 in frekvens.
+    beta_data <- beta_data[freq_data[[specie]] == 1]
+    
+    
+    if (length(unique(beta_data)) > 1) {
+      beta_data_fitted <- fitdist(beta_data, "beta", method = "mme")
+      beta_fit[nrow(beta_fit) + 1,] <- c(specie, beta_data_fitted$estimate[1], beta_data_fitted$estimate[2])
+      
+    }
+  }
+  
+  # create list for shannon index for each plot
+  shanon_list <- c()
+  
+  for (row in 1:nrow(cover_data)) {
+    
+    # Create an empty list for a given row
+    mean_posterior <- c()
+
+    
+    # for a given row, find out what species is found in frekvens
+    species_spotted_in_frekvens <- colnames(freq_data[c(freq_data[row,]  == 1)])
+    
+    #For each species spotten in frekvens, appends its posterior cover to the cover data for that row
+    for (species_spotted in species_spotted_in_frekvens ) {
+      
+        
+        alpha_post <- as.numeric((as.numeric(beta_fit[beta_fit$species == species_spotted,]$a) +
+                                    as.numeric(cover_data[[species_spotted]][row]) ))
+        beta_post <-  as.numeric(beta_fit[beta_fit$species == species_spotted,]$b) + 16 - as.numeric(cover_data[[species_spotted]][row])
+        
+        mean_posterior <- append(mean_posterior, (alpha_post)/(alpha_post+beta_post))
+        
+        
+      
+      
+    }
+    
+    #Calculate the shanon index value and append it to the list after normalizing and removing zeroes
+
+    total_cover <- sum(mean_posterior)
+    mean_posterior <- mean_posterior[!(mean_posterior == 0)]
+    shanon_value <- -sum(mean_posterior/total_cover * log((mean_posterior/total_cover)))
+    
+    shanon_list <- append(shanon_list,shanon_value)  
+    
+  }
+  return(shanon_list)
+}
+```
+
+
+
+```{r}
+result <- shanon_index_v2(cover_data, freq_data)
+```
+
+```{r}
+result
+```
+
+```{r}
+abiotisk$shanon_index <- result 
+```
+
+
+
+<h3> Animation </h3>
+
+Animation of shanon indexes in plots in Denmark
+
+
+Converting coordinates from UTM data to latitude longitude.
+
+The function adds two new columns to the dataframe named "latitude" and "longtitude".
+
+```{r}
+convert_to_longlat <- function(data_frame_input, UTMx, UTMy, projection = "+proj=utm +zone=32 +ellps=intl +units=m +no_defs +datum=WGS84") {
+  #Load Libraries
+  library(sp)
+  
+  # Create a new data frame with only the UTM data
+  df <- data.frame(UTMx, UTMy)
+  # turn na to 0 for calculations and save which points are na
+  df_na <- df
+  df[is.na(df)] <- 0
+  
+  
+  #Make it a SP object and specify the projection
+  coordinates(df) <-  ~ UTMx + UTMy
+  proj4string(df) <- CRS(projection)
+  
+  #Transform the data to long lat
+  df1 <- spTransform(df, CRS("+init=epsg:4326"))
+  
+  # Write the long lat
+  data_frame_input$latitude <-  df1@coords[,2]
+  data_frame_input$longtitude <-  df1@coords[,1]
+  
+  # Turn na back to na
+  data_frame_input$latitude[is.na(df_na[1]) ] <- NA 
+  data_frame_input$longtitude[is.na(df_na[2]) ] <- NA 
+  
+  return(data_frame_input)
+}
+```
+
+
+
+```{r}
+abiotisk <- convert_to_longlat(abiotisk, abiotisk$UTMx, abiotisk$UTMy)
+```
+
+
+The function animation_map uses longitude and latitude to create an animation of Denmark.
+Index is the values displayed as different colours on the map, and time is the column containing the the year the data is from.
+
+```{r}
+animation_map <- function(data_frame_in, longtitude, latitude, index, time, duration_time = 15) {
+  
+  
+  #Load map of Denmark
+  world.map <- map_data ("world")
+  map1 <- world.map %>% filter(region == "Denmark")
+  
+  # change input values to strings, so it is easier to use.
+  index <- deparse(substitute(index))
+  time <- deparse(substitute(time))
+  latitude <- deparse(substitute(latitude))
+  longtitude <- deparse(substitute(longtitude))
+  
+  # plot the map
+  map_ani <-  ggplot(map1)+ 
+    geom_map(map = map1, aes(long, lat, map_id = region), fill="white", colour = "black") +
+    coord_map()
+  
+  
+  # Add points
+  map_ani <-  map_ani +
+    geom_point(data = data_frame_in, aes(y= .data[[latitude]], x = .data[[longtitude]], colour = .data[[index]]), alpha = .9, size =10) + 
+    
+    scale_color_gradientn(colours = rainbow(5)) +
+    transition_states(factor(data_frame_in[[time]]), transition_length = 1, state_length = 1) +
+    labs(title = "Year: {next_state}") +
+    theme_void(base_size = 35)
+  
+  #create animation
+  animate(map_ani,  nframes = 2*length(unique(data_frame_in[[time]])), duration = duration_time, width = 600, height = 400, res = 35)
+  
+}
+```
+
+
+```{r, warning = FALSE}
+animation_map(abiotisk, longtitude, latitude, shanon_index, year)
+```
+
+
+
+
+
+
+
+
+
+
+

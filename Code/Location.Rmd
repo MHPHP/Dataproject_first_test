@@ -23,6 +23,7 @@ source("functions.r")
 Load the data
 ```{r}
 data_5130 <-read.csv("../Data/Processed data/data_5130.csv")
+data_6230 <-read.csv("../Data/Processed data/data_6230.csv")
 ```
 
 
@@ -89,7 +90,7 @@ animation_map(site_6230, longtitude, latitude, shanon_index_v2, year )
 
 
 ```{r}
-animation_map(data_5130, longtitude, latitude, shanon_index_v1, year )
+animation_map(data_5130, longtitude, latitude, shanon_index_v2, year )
 ```
 
 
@@ -97,7 +98,7 @@ Open street map
 
 
 ```{r}
-map_data <-  data_5130[data_5130$site == 4531,] %>%  select(longtitude, latitude, longtitude_mean_site, latitude_mean_site)
+map_data <-  data_5130[data_5130$site == 4531,] %>%  select(longtitude, latitude, longtitude_mean_site.x, latitude_mean_site.x)
 ```
 
 
@@ -139,5 +140,25 @@ OpenStreetMap::autoplot.OpenStreetMap(map_test2) + geom_point(data = map_data, m
 ```{r}
 map_test <- openmap(c(y_max,x_min),c(y_min,x_max),zoom = NULL,'bing')
 OpenStreetMap::autoplot.OpenStreetMap(map_test)
+```
+
+
+
+```{r}
+test <- convert_to_longlat(data_5130, data_5130$UTMx, data_5130$UTMy, projection = "+init=epsg:25832")
+```
+```{r}
+test$longtitude - data_5130$longtitude
+```
+```{r}
+test$latitude - data_5130$latitude
+```
+
+
+```{r}
+"EPSG:25832"
+```
+```{r}
+CRS("+init=epsg:25832")
 ```
 

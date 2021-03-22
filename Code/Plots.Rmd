@@ -51,6 +51,12 @@ lm(data_5130$simple_shanon_index ~ as.numeric(data_5130$enebær5md ))
 
 
 
+```{r}
+ggplot(data = data_5130, mapping = aes(x = , y = shanon_index_v2)) + 
+  geom_point()
+```
+
+
 
 Diversitets plots, different indexes.
 

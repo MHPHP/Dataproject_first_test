@@ -25,8 +25,7 @@ find_art_name <- function(nr) {
   return(artsliste$NavnDansk[artsliste$ArtID == nr])
 }
 
-
-convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
+convert_to_longlat <- function(data_frame_input, UTMx, UTMy, projection = "+proj=utm +zone=32 +ellps=intl +units=m +no_defs +datum=WGS84") {
   #Load Libraries
   library(sp)
   
@@ -39,7 +38,7 @@ convert_to_longlat <- function(data_frame_input, UTMx, UTMy) {
   
   #Make it a SP object and specify the projection
   coordinates(df) <-  ~ UTMx + UTMy
-  proj4string(df) <- CRS("+proj=utm +zone=32 +ellps=intl +units=m +no_defs +datum=WGS84")
+  proj4string(df) <- CRS(projection)
   
   #Transform the data to long lat
   df1 <- spTransform(df, CRS("+init=epsg:4326"))
