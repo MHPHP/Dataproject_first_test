@@ -7,5 +7,75 @@ output:
 editor_options:
   chunk_output_type: console
 ---
+<h1>Introduction</h1>
+The plant diversity is often calculated by using the number of times a plant in a certain area is observed, without taking into account the knowledge we have about which plants are in the area. 
+<br>
+Since some plants may be in the area, but is not observed, we loose a lot of valuable information by using this course of action. <br>
+To solve this issue the method of pin-point data has been introduced. 
+The pin-point data consists of two different forms of datasets. One is a cover-dataset, which contains information from a given plot, about how many times a specie was hit by a pin out of n possible. The other is a frequency-dataset which contains information about whether or not a specie is to be found in the given plot indicated by a binary value (1 for found and 0 for not found). <br>
+By using a bayesian method it is possible to use the information from both the cover-dataset and the information from the frequency-dataset.
+<br><br>
+To model the number of times a specie is hit by a pin we use the binomial model:
+$$
+P(Y = y| \theta) = {n \choose y}\theta^y(1-\theta)^{n-y}
+$$
+where $n$ is the total number of pins and $y$ is the number of times the specie is hit by a pin. <br>
+The binomial model is used as a likelihood function when modeling the posterior that is used for calculating the Shannon Index in a given plot. 
+<br>
+We can create a prior $\theta$ for each specie by using both cover and frequency data. The beta model is a conjugacy prior for the binomial model and, thus, is ideal to use. The beta-model is given by 
+$$
+f(\theta) = \frac{\Gamma (\alpha+\beta)}{\Gamma (\alpha) \Gamma(\beta)}\theta^{\alpha -1}(1-\theta)^{\beta-1}
+$$
+For each specie we fit a beta-prior using all the cover data where the corresponding frequency data is 1.
+<br><br>
+Using the above we can form a posterior, that will be an updated beta distribution for each specie in each plot
+$$
+\theta | (Y = y) \sim Beta(\alpha + y, \beta + n-y)
+$$
+When the posterior distribution is found for a specie in a given plot, we use the mean posterior as a measure of the abundance for the specie in the plot. <br>
 
-Welcome to my research website.
+The mean posterior for a Beta-distribution is given by:
+
+$$\frac{\alpha + y}{\alpha + y+\beta + n-y}$$
+
+
+## An example
+
+We work with data only including the terhabtype = 5130 from the NOVANA dataset. Click on this [link](data_5130.html) for further details on how this was created.
+
+```{r}
+cover <- read.csv("data/cover_data_5130.csv")
+
+freq <- read.csv("data/frekvens_data_5130.csv")
+
+```
+
+```{r, include=FALSE}
+source("code/function_shannon.R")
+```
+
+The above theoretical discussions of the beta-binomial model are implemented in function shanon_index_v2. For further specifications of the function click [link](function_shannon.html)
+
+-- MANGLER: Lav dataset, der viser cover-data og frekvens data. Evt lav et kunstigt
+
+Apply our shannon function on the data
+
+```{r, message=FALSE}
+result <- shanon_index_v2(cover, freq)
+```
+
+```{r, include=FALSE}
+library(tidyverse)
+library(kableExtra)
+```
+
+
+```{r}
+kable(result, "html") %>%
+    kable_styling() %>%
+    scroll_box(width = "900px", height = "400px")
+```
+
+
+
+
